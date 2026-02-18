@@ -11,7 +11,9 @@ import 'package:life_pattern/features/birth_profile/presentation/screens/profile
 import 'package:life_pattern/features/bonds/presentation/screens/bond_detail_screen.dart';
 import 'package:life_pattern/features/bonds/presentation/screens/bonds_screen.dart';
 import 'package:life_pattern/features/bonds/presentation/screens/create_bond_screen.dart';
-import 'package:life_pattern/features/content_library/presentation/screens/library_screen.dart';
+import 'package:life_pattern/features/library/presentation/screens/article_reader_screen.dart';
+import 'package:life_pattern/features/library/presentation/screens/collection_detail_screen.dart';
+import 'package:life_pattern/features/library/presentation/screens/library_home_screen.dart';
 import 'package:life_pattern/features/onboarding_auth/application/auth_providers.dart';
 import 'package:life_pattern/features/onboarding_auth/presentation/screens/auth_options_screen.dart';
 import 'package:life_pattern/features/onboarding_auth/presentation/screens/forgot_password_screen.dart';
@@ -256,7 +258,25 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/library',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: LibraryScreen()),
+                const NoTransitionPage(child: LibraryHomeScreen()),
+            routes: [
+              GoRoute(
+                path: 'collection/:id',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return CollectionDetailScreen(collectionId: id);
+                },
+              ),
+              GoRoute(
+                path: 'article/:id',
+                parentNavigatorKey:
+                    _rootNavigatorKey, // Hide bottom nav for reading?
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return ArticleReaderScreen(itemId: id);
+                },
+              ),
+            ],
           ),
         ],
       ),
