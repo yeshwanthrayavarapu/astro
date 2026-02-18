@@ -1,0 +1,58 @@
+name: life_pattern
+description: "Personality insights app with birth-chart profiles, timing cycles, and relationship compatibility."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management — Riverpod
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
+
+  # Navigation
+  go_router: ^17.1.0
+
+  # Firebase
+  firebase_core: ^4.4.0
+  firebase_auth: ^6.1.4
+  cloud_firestore: ^6.1.2
+  firebase_messaging: ^16.1.1
+  firebase_analytics: ^12.1.2
+  firebase_crashlytics: ^5.0.7
+  firebase_storage: ^13.0.6
+  cloud_functions: ^6.0.6
+
+  # Immutable Models
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.8.1
+
+  # Utilities
+  intl: ^0.20.2
+  timezone: ^0.11.0
+  shared_preferences: ^2.3.4
+  google_sign_in: ^6.2.2
+  smooth_page_indicator: ^1.2.0+3
+
+  # Birth Profile / Geocoding
+  flutter_nominatim: ^0.0.1+2
+  lat_lng_to_timezone: ^0.2.0
+  uuid: ^4.5.2
+  timeline_tile: ^2.0.0
+  flutter_local_notifications: ^21.0.0-dev.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^4.0.3
+  freezed: ^3.2.5
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
