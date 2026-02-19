@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_pattern/features/blueprint/application/blueprint_providers.dart';
 import 'package:life_pattern/features/blueprint/domain/pattern_template.dart';
+import 'package:life_pattern/features/blueprint/domain/user_pattern.dart';
 import 'package:life_pattern/features/blueprint/presentation/widgets/pattern_card.dart';
+import 'package:life_pattern/features/blueprint/presentation/widgets/pill_tab_control.dart';
+import 'package:life_pattern/features/blueprint/presentation/widgets/profile_header.dart';
+import 'package:life_pattern/features/onboarding_auth/application/auth_providers.dart';
 
 class BlueprintScreen extends ConsumerStatefulWidget {
   const BlueprintScreen({super.key});
@@ -12,16 +16,14 @@ class BlueprintScreen extends ConsumerStatefulWidget {
   ConsumerState<BlueprintScreen> createState() => _BlueprintScreenState();
 }
 
-class _BlueprintScreenState extends ConsumerState<BlueprintScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
+class _BlueprintScreenState extends ConsumerState<BlueprintScreen> {
+  int _selectedTabIndex = 0;
   final _categories = ['core_self', 'growth', 'relationships'];
+  final _tabNames = ['Core Self', 'Growth', 'Relationships'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     // Trigger pattern assignment if needed (fire and forget)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(blueprintControllerProvider.notifier); // Init controller
@@ -29,29 +31,14 @@ class _BlueprintScreenState extends ConsumerState<BlueprintScreen>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final userPatternsAsync = ref.watch(userPatternsProvider);
     final templatesAsync = ref.watch(patternTemplatesProvider);
+    final authState = ref.watch(authStateProvider);
+    final user = authState.asData?.value;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Blueprint'),
-        centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Core Self'),
-            Tab(text: 'Growth'),
-            Tab(text: 'Relationships'),
-          ],
-        ),
-      ),
+      backgroundColor: const Color(0xFFFAFAFA), // Light grey background
       body: userPatternsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(child: Text('Error: $err')),
@@ -60,19 +47,53 @@ class _BlueprintScreenState extends ConsumerState<BlueprintScreen>
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, st) => Center(child: Text('Error: $err')),
             data: (templates) {
-              if (userPatterns.isEmpty) {
-                return _buildEmptyState(context);
-              }
-              return TabBarView(
-                controller: _tabController,
-                children: _categories.map((category) {
-                  return _buildPatternList(
-                    context,
-                    category,
-                    userPatterns,
-                    templates,
-                  );
-                }).toList(),
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                        child: Column(
+                          children: [
+                            ProfileHeader(
+                              name: user?.displayName ?? 'Traveler',
+                              type: 'Cosmic Explorer', // Placeholder
+                              avatarUrl: user?.photoURL,
+                            ),
+                            const SizedBox(height: 24),
+                            PillTabControl(
+                              tabs: _tabNames,
+                              selectedIndex: _selectedTabIndex,
+                              onTabSelected: (index) {
+                                setState(() {
+                                  _selectedTabIndex = index;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Pattern List
+                  if (userPatterns.isEmpty)
+                    SliverFillRemaining(
+                      child: _buildEmptyState(context),
+                    )
+                  else
+                    _buildPatternList(
+                      context,
+                      _categories[_selectedTabIndex],
+                      userPatterns,
+                      templates,
+                    ),
+
+                  const SliverPadding(
+                      padding:
+                          EdgeInsets.only(bottom: 100)), // Space for bottom nav
+                ],
               );
             },
           );
@@ -100,40 +121,75 @@ class _BlueprintScreenState extends ConsumerState<BlueprintScreen>
   Widget _buildPatternList(
     BuildContext context,
     String category,
-    List<dynamic> userPatterns, // List<UserPattern>
+    List<UserPattern> userPatterns,
     List<PatternTemplate> templates,
   ) {
     // Filter patterns for this category
     final categoryPatterns = userPatterns.where((p) {
-      final template = templates.firstWhere((t) => t.id == p.patternTemplateId);
+      // Find template
+      final template = templates.firstWhere(
+        (t) => t.id == p.patternTemplateId,
+        orElse: () => const PatternTemplate(
+          id: 'unknown',
+          title: 'Unknown',
+          shortDescription: '',
+          longDescription: '',
+          category: 'unknown',
+          reflectionPrompts: [],
+          iconName: 'star',
+        ),
+      );
       return template.category == category;
     }).toList();
 
     if (categoryPatterns.isEmpty) {
-      return Center(
-        child: Text('No patterns found in this category.'),
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              Icon(Icons.inbox, size: 48, color: Colors.grey.shade300),
+              const SizedBox(height: 16),
+              Text(
+                'No patterns yet in this category.',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: categoryPatterns.length,
-      itemBuilder: (context, index) {
-        final pattern = categoryPatterns[index];
-        final template =
-            templates.firstWhere((t) => t.id == pattern.patternTemplateId);
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final pattern = categoryPatterns[index];
+            final template = templates.firstWhere(
+              (t) => t.id == pattern.patternTemplateId,
+              orElse: () => const PatternTemplate(
+                id: 'unknown',
+                title: 'Unknown Pattern',
+                shortDescription: '...',
+                longDescription: '...',
+                category: 'unknown',
+                reflectionPrompts: [],
+                iconName: 'star',
+              ),
+            );
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: PatternCard(
-            userPattern: pattern,
-            template: template,
-            onTap: () {
-              context.push('/blueprint/detail/${pattern.id}');
-            },
-          ),
-        );
-      },
+            return PatternCard(
+              userPattern: pattern,
+              template: template,
+              onTap: () {
+                context.push('/blueprint/detail/${pattern.id}');
+              },
+            );
+          },
+          childCount: categoryPatterns.length,
+        ),
+      ),
     );
   }
 }

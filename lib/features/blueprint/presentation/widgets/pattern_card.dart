@@ -16,101 +16,114 @@ class PatternCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    // userPattern.isUnlocked == true => unlocked
-    // userPattern.isUnlocked == false => locked
-
-    final isLockedState = !userPattern.isUnlocked;
-
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant),
-      ),
-      color: isLockedState
-          ? cs.surfaceContainer.withAlpha(128)
-          : cs.surfaceContainerLow,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
+    // New design: White card with purple accent
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6200EA).withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Icon & Name
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E5F5), // Light purple
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
                     _getIcon(template.iconName),
-                    color: isLockedState ? cs.onSurfaceVariant : cs.primary,
+                    color: const Color(0xFFAB47BC),
                     size: 20,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      template.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isLockedState
-                                ? cs.onSurfaceVariant
-                                : cs.onSurface,
-                          ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    template.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  if (isLockedState)
-                    Icon(Icons.lock_outline,
-                        size: 18, color: cs.onSurfaceVariant),
-                ],
+                ),
+                if (!userPattern.isUnlocked)
+                  const Icon(Icons.lock, size: 16, color: Color(0xFFE0E0E0))
+                else
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 16, color: Color(0xFFE0E0E0)),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Short Description
+            Text(
+              template.shortDescription,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF757575),
+                height: 1.5,
               ),
-              const SizedBox(height: 8),
-              Text(
-                template.shortDescription,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              if (!isLockedState) ...[
-                Row(
-                  children: [
-                    Text(
-                      'Intensity',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
+            ),
+
+            const SizedBox(height: 16),
+
+            // Intensity / Status
+            if (userPattern.isUnlocked)
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
                       child: LinearProgressIndicator(
                         value: userPattern.intensity / 100,
-                        backgroundColor: cs.surfaceContainerHighest,
-                        color: cs.primary,
-                        borderRadius: BorderRadius.circular(4),
+                        backgroundColor: const Color(0xFFF5F5F5),
+                        valueColor: AlwaysStoppedAnimation(
+                          const Color(0xFF6200EA).withValues(alpha: 0.5),
+                        ),
+                        minHeight: 4,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${userPattern.intensity.toInt()}%',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${userPattern.intensity.toInt()}%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF6200EA).withValues(alpha: 0.8),
                     ),
-                  ],
+                  ),
+                ],
+              )
+            else
+              Text(
+                'Unlock to reveal',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF6200EA).withValues(alpha: 0.8),
                 ),
-              ] else ...[
-                Text(
-                  'Unlock to reveal insights',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
