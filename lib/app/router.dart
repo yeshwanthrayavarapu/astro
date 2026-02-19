@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_pattern/app/widgets/app_scaffold.dart';
@@ -24,7 +24,8 @@ import 'package:life_pattern/features/onboarding_auth/presentation/screens/splas
 import 'package:life_pattern/features/blueprint/presentation/screens/blueprint_screen.dart';
 import 'package:life_pattern/features/blueprint/presentation/screens/pattern_detail_screen.dart';
 import 'package:life_pattern/features/timing_cycles/presentation/screens/cycle_detail_screen.dart';
-import 'package:life_pattern/features/timing_cycles/presentation/screens/timing_screen.dart'; // Correct import
+import 'package:life_pattern/features/timing_cycles/presentation/screens/timing_screen.dart';
+import 'package:life_pattern/features/settings/presentation/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ---------------------------------------------------------------------------
@@ -230,6 +231,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // Full-screen / Overlay routes (Siblings of ShellRoute)
+      GoRoute(
+        path: '/settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/bonds/create',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateBondScreen(),
+      ),
+      GoRoute(
+        path: '/library/article/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ArticleReaderScreen(itemId: id);
+        },
+      ),
+
       // Main app — shell with persistent bottom nav
       ShellRoute(
         builder: (context, state, child) => AppScaffold(child: child),
@@ -272,11 +293,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: BondsScreen()),
             routes: [
               GoRoute(
-                path: 'create',
-                parentNavigatorKey: _rootNavigatorKey, // Full screen modal
-                builder: (context, state) => const CreateBondScreen(),
-              ),
-              GoRoute(
                 path: 'detail/:id',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
@@ -295,15 +311,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
                   return CollectionDetailScreen(collectionId: id);
-                },
-              ),
-              GoRoute(
-                path: 'article/:id',
-                parentNavigatorKey:
-                    _rootNavigatorKey, // Hide bottom nav for reading?
-                builder: (context, state) {
-                  final id = state.pathParameters['id']!;
-                  return ArticleReaderScreen(itemId: id);
                 },
               ),
             ],

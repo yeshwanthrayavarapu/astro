@@ -1,133 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:life_pattern/features/bonds/application/bond_providers.dart';
-import 'package:life_pattern/features/bonds/domain/bond.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_pattern/features/bonds/presentation/widgets/bond_card.dart';
 
-class BondsScreen extends ConsumerWidget {
+class BondsScreen extends StatelessWidget {
   const BondsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bondsAsync = ref.watch(bondsProvider);
+  Widget build(BuildContext context) {
+    // Mock Data
+    final bonds = [
+      const _BondData('Alex', 'Partner', 92, null),
+      const _BondData('Jordan', 'Best Friend', 88, null),
+      const _BondData('Taylor', 'Colleague', 65, null),
+      const _BondData('Casey', 'Sibling', 74, null),
+      const _BondData('Jamie', 'Mentor', 81, null),
+      const _BondData('Riley', 'Ex-Partner', 45, null),
+    ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bonds')),
-      body: bondsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, st) => Center(child: Text('Error: $err')),
-        data: (bonds) {
-          if (bonds.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.people_outline,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text('Discover your connections',
-                      style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  const Text('Create your first bond to see compatibility.'),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: () => context.push('/bonds/create'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Bond'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: bonds.length,
-            itemBuilder: (context, index) {
-              final bond = bonds[index];
-              return _BondCard(bond: bond);
-            },
+      backgroundColor: const Color(0xFFF9FAFB),
+      appBar: AppBar(
+        title: const Text('Cosmic Bonds'),
+        backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(24),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.8,
+        ),
+        itemCount: bonds.length,
+        itemBuilder: (context, index) {
+          final bond = bonds[index];
+          return BondCard(
+            name: bond.name,
+            relation: bond.relation,
+            compatibilityScore: bond.score,
+            avatarUrl: bond.avatarUrl,
           );
         },
       ),
-      floatingActionButton: bondsAsync.hasValue && bondsAsync.value!.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: () => context.push('/bonds/create'),
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go('/bonds/create'),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Bond'),
+        backgroundColor: const Color(0xFF6200EA),
+        foregroundColor: Colors.white,
+      ),
     );
   }
 }
 
-class _BondCard extends StatelessWidget {
-  final Bond bond;
+class _BondData {
+  final String name;
+  final String relation;
+  final int score;
+  final String? avatarUrl;
 
-  const _BondCard({required this.bond});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/bonds/detail/${bond.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child:
-                    Text(bond.otherName.isNotEmpty ? bond.otherName[0] : '?'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(bond.otherName,
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 4,
-                      children: bond.labels
-                          .take(2)
-                          .map((l) => Text(
-                                l,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                    ),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                children: [
-                  CircularProgressIndicator(
-                    value: bond.scores.overall / 100,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    strokeWidth: 4,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${bond.scores.overall}%',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  const _BondData(this.name, this.relation, this.score, this.avatarUrl);
 }
