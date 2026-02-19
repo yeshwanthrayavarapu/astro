@@ -106,47 +106,56 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublic = publicRoutes.any((r) => location.startsWith(r));
       final isProfileRoute = profileRoutes.any((r) => location.startsWith(r));
 
-      // While auth is loading, stay on splash
-      if (authState.isLoading) {
+      // 1. Auth Loading: only block if we have NO data yet
+      if (authState.isLoading && !authState.hasValue) {
         return location == '/splash' ? null : '/splash';
       }
 
-      final User? user = authState.when(
-        data: (u) => u,
-        loading: () => null,
-        error: (_, __) => null,
-      );
+      // Check for auth error or data
+      if (authState.hasError) {
+        // Simple error handling: stay on splash or go to onboarding?
+        // Let's assume error means "not logged in" or "network issue"
+        // For now, if we are on splash, maybe go to onboarding?
+        // Or if we have no user, treat as null.
+        // Let's proceed to check existing value or treat as null.
+      }
 
-      // Not authenticated → public flow
+      final User? user = authState.asData?.value;
+
+      // 2. Not authenticated
       if (user == null) {
         if (isPublic) return null;
+
+        // Check if onboarding was seen
         final prefs = await SharedPreferences.getInstance();
         final seen = prefs.getBool('onboarding_seen') ?? false;
         return seen ? '/auth/options' : '/onboarding';
       }
 
-      // Authenticated but on a public route → check profile
+      // 3. Authenticated
+
+      // If we are on a public route, we need to decide where to go (Profile or App)
       if (isPublic) {
-        // Profile still loading → let splash handle it
-        if (profileAsync.isLoading) return '/splash';
-        final hasProfile = profileAsync.when(
-          data: (p) => p != null,
-          loading: () => false,
-          error: (_, __) => false,
-        );
+        // Profile Loading: only block if NO data
+        if (profileAsync.isLoading && !profileAsync.hasValue) {
+          return '/splash';
+        }
+
+        final hasProfile = profileAsync.asData?.value != null;
         return hasProfile ? '/home' : '/profile/welcome';
       }
 
-      // Authenticated, on a profile route → allow
-      if (isProfileRoute) return null;
+      // If on a profile route, allow it (unless we want to kick them out if profile exists?)
+      if (isProfileRoute) {
+        // Optional: if profile exists, maybe redirect to home?
+        // But user might be editing. Let's allowing staying.
+        return null;
+      }
 
-      // Authenticated, on a main app route → check profile is complete
-      if (!profileAsync.isLoading) {
-        final hasProfile = profileAsync.when(
-          data: (p) => p != null,
-          loading: () => true, // optimistic — don't flash redirect
-          error: (_, __) => true,
-        );
+      // 4. Main App Route (Protected)
+      // Check if profile is missing
+      if (!profileAsync.isLoading || profileAsync.hasValue) {
+        final hasProfile = profileAsync.asData?.value != null;
         if (!hasProfile) return '/profile/welcome';
       }
 
@@ -195,7 +204,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/confirm',
         builder: (context, state) {
-          final data = state.extra as BirthFormData;
+          final data = state.extra;
+          if (data is! BirthFormData) {
+            // extra is null or wrong type (e.g. after hot-restart / deep-link)
+            // Redirect back to the form so the user can fill it in again.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) context.go('/profile/form');
+            });
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
           return ProfileConfirmScreen(data: data);
         },
       ),

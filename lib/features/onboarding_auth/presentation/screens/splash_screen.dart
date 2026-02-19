@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:life_pattern/features/onboarding_auth/application/auth_providers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -25,33 +22,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
-    _navigate();
-  }
-
-  Future<void> _navigate() async {
-    // Wait for minimum splash duration
-    await Future.delayed(const Duration(milliseconds: 2200));
-    if (!mounted) return;
-
-    final authState = ref.read(authStateProvider);
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
-
-    if (!mounted) return;
-
-    authState.when(
-      data: (user) {
-        if (user != null) {
-          context.go('/home');
-        } else if (onboardingSeen) {
-          context.go('/auth/options');
-        } else {
-          context.go('/onboarding');
-        }
-      },
-      loading: () => context.go('/onboarding'),
-      error: (_, __) => context.go('/onboarding'),
-    );
   }
 
   @override
