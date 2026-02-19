@@ -124,7 +124,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // 2. Not authenticated
       if (user == null) {
-        if (isPublic) return null;
+        // If we are on public route (BUT NOT SPLASH), stay there.
+        // If we are on splash, we must move to onboarding/auth.
+        if (isPublic && location != '/splash') return null;
 
         // Check if onboarding was seen
         final prefs = await SharedPreferences.getInstance();
@@ -138,10 +140,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isPublic) {
         // Profile Loading: only block if NO data
         if (profileAsync.isLoading && !profileAsync.hasValue) {
-          return '/splash';
+          // If on splash, stay on splash. If on other public route, maybe stay there?
+          // If on splash, we return null (stay) or specifically '/splash'
+          return location == '/splash' ? null : '/splash';
         }
 
         final hasProfile = profileAsync.asData?.value != null;
+
+        // If on splash, we MUST redirect
+        if (location == '/splash') {
+          return hasProfile ? '/home' : '/profile/welcome';
+        }
+
+        // If on other public pages (login etc), redirect to home if logged in
         return hasProfile ? '/home' : '/profile/welcome';
       }
 
