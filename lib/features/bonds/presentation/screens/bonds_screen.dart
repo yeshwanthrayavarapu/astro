@@ -45,6 +45,10 @@ class BondsScreen extends StatelessWidget {
             relation: bond.relation,
             compatibilityScore: bond.score,
             avatarUrl: bond.avatarUrl,
+            onTap: () {
+              // Mock ID for now
+              context.push('/bonds/detail/mock-id-${index}');
+            },
           );
         },
       ),

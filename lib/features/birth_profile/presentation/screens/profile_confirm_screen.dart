@@ -193,12 +193,11 @@ class ProfileConfirmScreen extends ConsumerWidget {
 
     final state = ref.read(profileControllerProvider);
     if (!state.hasError) {
-      // Profile saved → mark onboarding as complete
-      await ref
-          .read(authControllerProvider.notifier)
-          .completeOnboarding(user.uid);
+      // Force a refresh of the profile provider to ensure the Router picks up the change
+      ref.invalidate(profileProvider);
 
       if (context.mounted) {
+        // Use go to reset the stack
         context.go('/home');
       }
     } else if (context.mounted) {

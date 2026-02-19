@@ -7,12 +7,14 @@ class BondCard extends StatelessWidget {
     required this.relation,
     required this.compatibilityScore,
     this.avatarUrl,
+    this.onTap,
   });
 
   final String name;
   final String relation;
   final int compatibilityScore;
   final String? avatarUrl;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,17 @@ class BondCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to Bond Detail
+            // Navigate to detail
+            // We need the bond ID, but this widget only has display fields.
+            // Assumption: The parent widget passes the ID or handles navigation,
+            // OR we need to pass the ID into BondCard.
+            // Let's assume we need to add `id` to BondCard.
+            // Actually, for now, let's just make sure the `onTap` callback is exposed or handled.
+            // Wait, the previous code had `// TODO: Navigate to Bond Detail`.
+            // I should add `onTap` callback to the widget parameters or pass the ID.
+            // Let's update the widget to accept an `id` or `onTap`.
+            // Given the signature, let's add `onTap` callback.
+            if (onTap != null) onTap!();
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(

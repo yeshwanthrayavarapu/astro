@@ -6,8 +6,6 @@ import 'package:life_pattern/features/blueprint/domain/pattern_template.dart';
 import 'package:life_pattern/features/blueprint/domain/user_pattern.dart';
 import 'package:life_pattern/features/blueprint/presentation/widgets/pattern_card.dart';
 import 'package:life_pattern/features/blueprint/presentation/widgets/pill_tab_control.dart';
-import 'package:life_pattern/features/blueprint/presentation/widgets/profile_header.dart';
-import 'package:life_pattern/features/onboarding_auth/application/auth_providers.dart';
 
 class BlueprintScreen extends ConsumerStatefulWidget {
   const BlueprintScreen({super.key});
@@ -34,8 +32,6 @@ class _BlueprintScreenState extends ConsumerState<BlueprintScreen> {
   Widget build(BuildContext context) {
     final userPatternsAsync = ref.watch(userPatternsProvider);
     final templatesAsync = ref.watch(patternTemplatesProvider);
-    final authState = ref.watch(authStateProvider);
-    final user = authState.asData?.value;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA), // Light grey background
@@ -56,10 +52,15 @@ class _BlueprintScreenState extends ConsumerState<BlueprintScreen> {
                         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                         child: Column(
                           children: [
-                            ProfileHeader(
-                              name: user?.displayName ?? 'Traveler',
-                              type: 'Cosmic Explorer', // Placeholder
-                              avatarUrl: user?.photoURL,
+                            Text(
+                              'Your Blueprint',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Serif',
+                                  ),
                             ),
                             const SizedBox(height: 24),
                             PillTabControl(
